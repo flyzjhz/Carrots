@@ -14,8 +14,6 @@ Installation
 
 ```bash
 make
-```
-```bash
 make install
 ```
 
