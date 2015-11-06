@@ -610,7 +610,7 @@ base64_decode_alloc_ctx(struct base64_decode_context * ctx,
 }
 
 #include <stdio.h>
-int main(int argc, char **argv)
+int main_example(int argc, char **argv)
 {
 	char *type = argv[1];
     char *in = argv[2];
