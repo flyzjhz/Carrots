@@ -18,8 +18,9 @@ Installation
 1. if you want to encode your voice to small size file
 ```bash
 	char *in = "hello, 你好,谢谢";
-	char *out = NULL;
 	unsigned int n = 10;
+	char out[n * 3 + 1] = {0};
+	char *p_des = NULL;
 
 	char *p_des = utf8_strncpy(out, utf8_ltrim(in), n);
 	if (*p_des != '\0' && *out != '\0') {
