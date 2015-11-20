@@ -121,13 +121,14 @@ char* utf8_ltrim( char* str )
 int main(int argc, char **argv)
 {
     // get 50 char of utf8
-    char out[128] = {0};
-    
-    utf8_strncpy(out, utf8_ltrim(argv[1]), atoi(argv[2]));
-    if (*out != '\0') {
+	unsigned int n = atoi(argv[2]) * 3 + 1;
+    char out[n] = {0};
+
+    char *pout = utf8_strncpy(out, utf8_ltrim(argv[1]), atoi(argv[2]));
+    if (*pout != '\0' && *out != '\0') {
         printf("out:%s\n", out);
     }
-    
+
     return 0;
 }
 
