@@ -10,7 +10,7 @@
 
 
 MYSQL_CONN *_mysql_init(const char *db_host, const char *db_user, const char *db_pass,
-                        const char *db_name, unsigned int db_port);
+                        const char *db_name, unsigned int db_port, unsigned int db_conn_timeout);
 
 unsigned long _mysql_real_escape_string(MYSQL_CONN *handle, char *to, unsigned long to_len,
                                         const char *from, unsigned long from_len);
@@ -30,6 +30,7 @@ int _mysql_destroy(MYSQL_CONN *handle);
 #define mysql_get_pass(handle)          (handle->db_pass)
 #define mysql_get_name(handle)          (handle->db_name)
 #define mysql_get_port(handle)          (handle->db_port)
+#define mysql_get_conn_timeout(handle)  (handle->db_conn_timeout);
 
 
 int _mysql_conn(MYSQL_CONN *handle)
@@ -41,6 +42,10 @@ int _mysql_conn(MYSQL_CONN *handle)
 
     if (handle == NULL) {
         return -1;
+    }
+
+    if (handle->db_conn_timeout > 0) {
+        timeout = handle->db_conn_timeout;
     }
 
     /* init mysql lib */
@@ -89,7 +94,7 @@ int _mysql_conn(MYSQL_CONN *handle)
 }
 
 MYSQL_CONN *_mysql_init(const char *db_host, const char *db_user, const char *db_pass,
-                        const char *db_name, unsigned int db_port)
+                        const char *db_name, unsigned int db_port, unsigned int db_conn_timeout)
 {
     MYSQL_CONN *handle;
 
@@ -109,6 +114,7 @@ MYSQL_CONN *_mysql_init(const char *db_host, const char *db_user, const char *db
     strncpy(handle->db_pass, db_pass, MYSQL_CONN_NAME_LEN);
     strncpy(handle->db_name, db_name, MYSQL_CONN_NAME_LEN);
     handle->db_port = db_port;
+    handle->db_conn_timeout = db_conn_timeout;
 
     /* real connect to mysql server */
     if (_mysql_conn(handle) != 0) {
@@ -325,11 +331,11 @@ int _mysql_destroy(MYSQL_CONN *handle)
 
 
 
-MYSQL_CONN *ct_mysql_connect(char *host, int port, char *user, char *pass, char *name)
+MYSQL_CONN *ct_mysql_connect(char *host, int port, char *user, char *pass, char *name, int db_conn_timeout)
 {
-    MYSQL_CONN *mydb = _mysql_init(host, user, pass, name, port);
+    MYSQL_CONN *mydb = _mysql_init(host, user, pass, name, port, db_conn_timeout);
     if (mydb == NULL) {
-        printf("_mysql_init error, host:%s:%d, user:%s, pass:%s, dbname:%s\n", host, port, user, pass, name);
+        printf("_mysql_init error, host:%s:%d, user:%s, pass:%s, dbname:%s, timeout:%d\n", host, port, user, pass, name, db_conn_timeout);
         return NULL;
     }
 
@@ -363,6 +369,7 @@ MYSQL_RES *ct_mysql_store_result(MYSQL_CONN *handle, int options)
 #define db_user "mysql_user"
 #define db_pass "mysql_pass"
 #define db_name "mysql_db"
+#define db_timeout 1
 
 #define MAX_LINE    1024
 int main(int argc, char const *argv[]) {
@@ -372,7 +379,7 @@ int main(int argc, char const *argv[]) {
     char sql[MAX_LINE] = {0};
     int n = 0;
 
-    db = ct_mysql_connect(db_host, atoi(db_port), db_user, db_pass, db_name);
+    db = ct_mysql_connect(db_host, atoi(db_port), db_user, db_pass, db_name, db_timeout);
     if (db == NULL) {
         printf("mysql connect fail:%s\n", db_host);
         return -1;

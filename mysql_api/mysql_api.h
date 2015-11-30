@@ -35,6 +35,7 @@ typedef struct _mysql_handle {
     char db_pass[MYSQL_CONN_NAME_LEN + 1];
     char db_name[MYSQL_CONN_NAME_LEN + 1];
     unsigned int db_port;
+    unsigned int db_conn_timeout;
 } MYSQL_CONN;
 
 
@@ -42,7 +43,7 @@ typedef struct _mysql_handle {
 
 
 
-MYSQL_CONN *ct_mysql_connect(char *host, int port, char *user, char *pass, char *name);
+MYSQL_CONN *ct_mysql_connect(char *host, int port, char *user, char *pass, char *name, int conn_timeout);
 void ct_mysql_disconnect(MYSQL_CONN *mydb);
 int ct_mysql_query(MYSQL_CONN *handle, char *sql_string, int sql_len, int options);
 MYSQL_RES *ct_mysql_store_result(MYSQL_CONN *handle, int options);
