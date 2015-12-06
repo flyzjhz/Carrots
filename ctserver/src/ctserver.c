@@ -405,7 +405,7 @@ int main(int argc, char **argv)
     struct sockaddr_in local, remote;
     socklen_t addrlen;
     
-    char buf[BUF_SIZE] = {0};
+    /*char buf[BUF_SIZE] = {0};
     
     size_t pbuf_len = 0;
     size_t pbuf_size = sizeof(buf) + 1;
@@ -413,7 +413,7 @@ int main(int argc, char **argv)
     if (pbuf == NULL) {
         log_error("calloc fail: size[%d]", pbuf_size);
         exit(1);
-    }
+    }*/
     
     // Create Listen Socket
     int bind_port = atoi(config_t.bind_port);
@@ -750,6 +750,16 @@ int main(int argc, char **argv)
     
     epoll_fd = -1;
     listen_fd = -1;
+
+	if (childs_t != NULL) {
+		free(childs_t);
+		childs_t = NULL;
+	}
+
+	if (epoll_evts != NULL) {
+		free(epoll_evts);
+		epoll_evts = NULL;
+	}
     
     log_info("I'm finish");
     

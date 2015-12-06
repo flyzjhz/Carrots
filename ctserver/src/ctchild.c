@@ -502,6 +502,10 @@ CTEXIT:
         mclose(mfp_out);
         mfp_out = NULL;
     }
+	if (epoll_evts) {
+		free(epoll_evts);
+		epoll_evts = NULL;
+	}
 
     _exit(111);
     
