@@ -40,4 +40,7 @@ void sig_childblock();
 
 void sig_childunblock();
 
+
+void byte_copy(register char *to, register unsigned int n, register char *from);
+
 #endif /* ctutils_h */

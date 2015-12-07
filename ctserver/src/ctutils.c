@@ -143,3 +143,37 @@ void sig_childunblock()
 {
     sig_unblock(SIGCHLD);
 }
+
+
+
+/**
+ *	从from拷贝n字节到to
+ * 
+ *	@param to   目标地址
+ * 	@param n    拷贝的字节数
+ *	@param from 源地址
+ */
+void byte_copy(register char *to, register unsigned int n, register char *from)
+{
+    for (;;) {
+        if (!n) {
+            return;
+        }   
+        *to++ = *from++;
+        --n;
+    
+        if (!n) {
+            return;
+        }   
+        *to++ = *from++;
+        --n;
+    
+        if (!n) {
+            return;
+        }   
+        *to++ = *from++;
+        --n;
+    }   
+}
+
+

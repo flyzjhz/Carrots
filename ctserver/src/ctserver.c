@@ -499,6 +499,7 @@ int main(int argc, char **argv)
             if (evt_fd == listen_fd) {
                 // new connect
                 if ((connfd = accept(listen_fd, (struct sockaddr *)&remote, &addrlen)) > 0) {
+
                     char *ipaddr = inet_ntoa(remote.sin_addr);
                     log_debug("accept client:%s", ipaddr);
                     
