@@ -33,6 +33,7 @@ struct config_st {
     char chdir_path[MAX_LINE];
     char offset_path[MAX_LINE];
     char wait_sleep[MAX_LINE];
+    char exit_time[MAX_LINE];
     char max_childs[MAX_LINE];
 };
 

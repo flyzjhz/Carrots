@@ -15,6 +15,6 @@ void create_daemon(char *chdir_path);
 
 int is_dir_exits(char *path);
 
-int is_need_master_exit(int file_fd, char *file_name);
+int is_need_master_exit(int file_fd, char *file_name, unsigned long exit_time);
 
 #endif /* ctutils_h */

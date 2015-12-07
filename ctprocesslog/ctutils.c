@@ -110,7 +110,7 @@ int is_dir_exits(char *path)
  *
  *  @return 0:不退出   1:退出
  */
-int is_need_master_exit(int file_fd, char *file_name)
+int is_need_master_exit(int file_fd, char *file_name, unsigned long exit_time)
 {
     struct stat st = {0};
     if (fstat(file_fd, &st) == -1) {
@@ -118,7 +118,8 @@ int is_need_master_exit(int file_fd, char *file_name)
         log_error("stat file:%s fail:%m", file_name);
         return 0;
     }
-    if (time(NULL) > (st.st_mtime + (3600 * 24))) {
+    //if (time(NULL) > (st.st_mtime + (3600 * 24))) {
+    if (time(NULL) > (st.st_mtime + exit_time)) {
         return 1;
     }
     

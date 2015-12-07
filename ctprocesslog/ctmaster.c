@@ -19,6 +19,7 @@
 #define DEF_OFFSETPATH          "./offset"
 #define DEF_CHDIRPATH           "./"
 #define DEF_WAITSLEEP           "5"
+#define DEF_EXITTIME			"86400"
 
 
 // save config from read config file
@@ -90,7 +91,7 @@ int read_config(dictionary *dict)
         snprintf(config_t.offset_path, sizeof(config_t.offset_path), "%s", poffset_path);
     }
     
-    // wait retry path
+ 	// wait sleep 
     char *pwait_sleep = dictionary_get(dict, "global:wait_sleep", NULL);
     if (pwait_sleep == NULL) {
         log_warning("parse config 'wait_sleep' fail, use default:%s", DEF_WAITSLEEP);
@@ -99,6 +100,15 @@ int read_config(dictionary *dict)
         snprintf(config_t.wait_sleep, sizeof(config_t.wait_sleep), "%s", pwait_sleep);
     }
     
+    // exit time
+    char *pexit_time = dictionary_get(dict, "global:exit_time", NULL);
+    if (pexit_time == NULL) {
+        log_warning("parse config 'exit_time' fail, use default:%s", DEF_EXITTIME);
+        snprintf(config_t.exit_time, sizeof(config_t.exit_time), "%s", DEF_EXITTIME);
+    } else {
+        snprintf(config_t.exit_time, sizeof(config_t.exit_time), "%s", pexit_time);
+    }
+
     // max child number
     char *pmax_childs = dictionary_get(dict, "global:max_childs", NULL);
     if (pmax_childs == NULL) {
@@ -257,6 +267,7 @@ int main(int argc, char **argv)
     
     char cfg_file[MAX_LINE] = {0};
     int make_deamon = 0;
+	unsigned int exit_time = 0;
     
     int ch;
     const char *args = "c:dh";
@@ -381,7 +392,7 @@ int main(int argc, char **argv)
     while (1) {
         if (!fgets(buf, sizeof(buf)-1, fp)) {
             // 读取失败
-            if (is_need_master_exit(fileno(fp), config_t.process_file) == 1) {
+            if (is_need_master_exit(fileno(fp), config_t.process_file, atoi(config_t.exit_time)) == 1) {
                 log_info("file:%s was expire, bye!", config_t.process_file);
                 goto MASTER_BYE;
             }
