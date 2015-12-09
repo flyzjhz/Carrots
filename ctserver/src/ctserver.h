@@ -23,7 +23,7 @@
 
 
 // config file struct
-struct config_st
+struct config_t
 {
     char bind_port[10];
     char log_level[MAX_LINE];
@@ -34,14 +34,14 @@ struct config_st
 };
 
 
-struct client_st
+struct client_t
 {
     int fd;
     char ip[20];
     char port[20];
 };
 
-struct childs_st
+struct childs_t
 {
     int used;
     int pid;
@@ -50,7 +50,7 @@ struct childs_st
     int pfd_w;      // 向子进程写
     
     // ------
-    struct client_st client_info;
+    struct client_t client_info;
 };
 
 #endif /* ctserver_h */

@@ -41,8 +41,8 @@
 // save config from read config file
 dictionary *dict_conf          = NULL;
 
-struct config_st config_t;
-struct childs_st *childs_t     = NULL;
+struct config_t config_st;
+struct childs_t *childs_st     = NULL;
 
 
 // epoll
@@ -86,54 +86,54 @@ int read_config(dictionary *dict)
     char *pbind_port = dictionary_get(dict, "global:bind_port", NULL);
     if (pbind_port == NULL) {
         log_warning("parse config 'bind_port' fail, use default:%s", DEF_BINDPORT);
-        snprintf(config_t.bind_port, sizeof(config_t.bind_port), "%s", DEF_BINDPORT);
+        snprintf(config_st.bind_port, sizeof(config_st.bind_port), "%s", DEF_BINDPORT);
     } else {
-        snprintf(config_t.bind_port, sizeof(config_t.bind_port), "%s", pbind_port);
+        snprintf(config_st.bind_port, sizeof(config_st.bind_port), "%s", pbind_port);
     }
     
     // log level
     char *plog_level = dictionary_get(dict, "global:log_level", NULL);
     if (plog_level == NULL) {
         log_warning("parse config 'log_level' fail, use default:%s", DEF_LOGLEVEL);
-        snprintf(config_t.log_level, sizeof(config_t.log_level), "%s", DEF_LOGLEVEL);
+        snprintf(config_st.log_level, sizeof(config_st.log_level), "%s", DEF_LOGLEVEL);
     } else {
-        snprintf(config_t.log_level, sizeof(config_t.log_level), "%s", plog_level);
+        snprintf(config_st.log_level, sizeof(config_st.log_level), "%s", plog_level);
     }
     
     // change dir
     char *pchdir_path = dictionary_get(dict, "global:chdir_path", NULL);
     if (pchdir_path == NULL) {
         log_warning("parse config 'chdir_path' fail, use default:%s", DEF_CHDIRPATH);
-        snprintf(config_t.chdir_path, sizeof(config_t.chdir_path), "%s", DEF_CHDIRPATH);
+        snprintf(config_st.chdir_path, sizeof(config_st.chdir_path), "%s", DEF_CHDIRPATH);
     } else {
-        snprintf(config_t.chdir_path, sizeof(config_t.chdir_path), "%s", pchdir_path);
+        snprintf(config_st.chdir_path, sizeof(config_st.chdir_path), "%s", pchdir_path);
     }
     
     // max child number
     char *pmax_childs = dictionary_get(dict, "global:max_childs", NULL);
     if (pmax_childs == NULL) {
         log_warning("parse config 'max_childs' fail, use default:%s", DEF_MAXCHILDS);
-        snprintf(config_t.max_childs, sizeof(config_t.max_childs), "%s", DEF_MAXCHILDS);
+        snprintf(config_st.max_childs, sizeof(config_st.max_childs), "%s", DEF_MAXCHILDS);
     } else {
-        snprintf(config_t.max_childs, sizeof(config_t.max_childs), "%s", pmax_childs);
+        snprintf(config_st.max_childs, sizeof(config_st.max_childs), "%s", pmax_childs);
     }
     
     // child program
     char *pchild_prog = dictionary_get(dict, "global:child_prog", NULL);
     if (pchild_prog == NULL) {
         log_warning("parse config 'child_prog' fail, use default:%s", DEF_CHILDPROG);
-        snprintf(config_t.child_prog, sizeof(config_t.child_prog), "%s", DEF_CHILDPROG);
+        snprintf(config_st.child_prog, sizeof(config_st.child_prog), "%s", DEF_CHILDPROG);
     } else {
-        snprintf(config_t.child_prog, sizeof(config_t.child_prog), "%s", pchild_prog);
+        snprintf(config_st.child_prog, sizeof(config_st.child_prog), "%s", pchild_prog);
     }
     
     // child config file
     char *pchild_cf = dictionary_get(dict, "global:child_cf", NULL);
     if (pchild_cf == NULL) {
         log_warning("parse config 'child_cf' fail, use default:%s", DEF_CHILDINI);
-        snprintf(config_t.child_cf, sizeof(config_t.child_cf), "%s", DEF_CHILDINI);
+        snprintf(config_st.child_cf, sizeof(config_st.child_cf), "%s", DEF_CHILDINI);
     } else {
-        snprintf(config_t.child_cf, sizeof(config_t.child_cf), "%s", pchild_cf);
+        snprintf(config_st.child_cf, sizeof(config_st.child_cf), "%s", pchild_cf);
     }
     
     
@@ -148,12 +148,12 @@ int read_config(dictionary *dict)
  *
  *  @return 返回索引，－1: 失败
  */
-int get_idle_idx_from_childs_t()
+int get_idle_idx_from_childs()
 {
     int idx = -1;
     int i = 0;
-    for (i = 0; i<(atoi(config_t.max_childs) + 1); i++) {
-        if (childs_t[i].used == 0) {
+    for (i = 0; i<(atoi(config_st.max_childs) + 1); i++) {
+        if (childs_st[i].used == 0) {
             idx = i;
             break;
         }
@@ -166,9 +166,9 @@ int get_idx_with_sockfd(int sockfd)
 {
     int idx = -1;
     int i = 0;
-    for (i=0; i<(atoi(config_t.max_childs) + 1); i++) {
-        if ((childs_t[i].pfd_r == sockfd)
-            && (childs_t[i].used == 1)) {
+    for (i=0; i<(atoi(config_st.max_childs) + 1); i++) {
+        if ((childs_st[i].pfd_r == sockfd)
+            && (childs_st[i].used == 1)) {
             idx = i;
             break;
         }
@@ -180,15 +180,15 @@ int get_idx_with_sockfd(int sockfd)
 
 void init_child_with_idx(int i)
 {
-    childs_t[i].used = 0;
-    childs_t[i].pid = -1;
-    childs_t[i].pfd_r = -1;
-    childs_t[i].pfd_w = -1;
-    memset(childs_t[i].sid, 0, sizeof(childs_t[i].sid));
+    childs_st[i].used = 0;
+    childs_st[i].pid = -1;
+    childs_st[i].pfd_r = -1;
+    childs_st[i].pfd_w = -1;
+    memset(childs_st[i].sid, 0, sizeof(childs_st[i].sid));
     
-    childs_t[i].client_info.fd = -1;
-    memset(childs_t[i].client_info.ip, 0, sizeof(childs_t[i].client_info.ip));
-    memset(childs_t[i].client_info.port, 0, sizeof(childs_t[i].client_info.port));
+    childs_st[i].client_info.fd = -1;
+    memset(childs_st[i].client_info.ip, 0, sizeof(childs_st[i].client_info.ip));
+    memset(childs_st[i].client_info.port, 0, sizeof(childs_st[i].client_info.port));
 }
 
 void clean_child_with_idx(int i)
@@ -196,25 +196,25 @@ void clean_child_with_idx(int i)
     log_debug("clean child index:%d", i);
     
     // clean child
-    childs_t[i].used = 0;
-    childs_t[i].pid = -1;
-    memset(childs_t[i].sid, 0, sizeof(childs_t[i].sid));
-    if (childs_t[i].pfd_r != -1) {
-        close(childs_t[i].pfd_r);
-        childs_t[i].pfd_r = -1;
+    childs_st[i].used = 0;
+    childs_st[i].pid = -1;
+    memset(childs_st[i].sid, 0, sizeof(childs_st[i].sid));
+    if (childs_st[i].pfd_r != -1) {
+        close(childs_st[i].pfd_r);
+        childs_st[i].pfd_r = -1;
     }
-    if (childs_t[i].pfd_w != -1) {
-        close(childs_t[i].pfd_w);
-        childs_t[i].pfd_w = -1;
+    if (childs_st[i].pfd_w != -1) {
+        close(childs_st[i].pfd_w);
+        childs_st[i].pfd_w = -1;
     }
     
     // clean client info
-    if (childs_t[i].client_info.fd != -1) {
-        close(childs_t[i].client_info.fd);
-        childs_t[i].client_info.fd = -1;
+    if (childs_st[i].client_info.fd != -1) {
+        close(childs_st[i].client_info.fd);
+        childs_st[i].client_info.fd = -1;
     }
-    memset(childs_t[i].client_info.ip, 0, sizeof(childs_t[i].client_info.ip));
-    memset(childs_t[i].client_info.port, 0, sizeof(childs_t[i].client_info.port));
+    memset(childs_st[i].client_info.ip, 0, sizeof(childs_st[i].client_info.ip));
+    memset(childs_st[i].client_info.port, 0, sizeof(childs_st[i].client_info.port));
     
 }
 
@@ -253,8 +253,8 @@ void sigchld_exit()
 {
     int wstat, pid, i;
     while ((pid = waitpid(-1, &wstat, WNOHANG)) > 0) {
-        /*for (i=0; i<(atoi(config_t.max_childs) + 1); i++) {
-            if ((childs_t[i].used == 1) && (childs_t[i].pid == pid)) {
+        /*for (i=0; i<(atoi(config_st.max_childs) + 1); i++) {
+            if ((childs_st[i].used == 1) && (childs_st[i].pid == pid)) {
                 // catch child exit
                 clean_child_with_idx(i);
                 
@@ -350,7 +350,7 @@ int main(int argc, char **argv)
     
     if (make_deamon == 1) {
         // create deamon
-        create_daemon(config_t.chdir_path);
+        create_daemon(config_st.chdir_path);
     }
     
     // init log
@@ -365,18 +365,18 @@ int main(int argc, char **argv)
     if (read_config(dict_conf) != 0) {
         return 1;
     }
-    log_level = atoi(config_t.log_level);
+    log_level = atoi(config_st.log_level);
     
-    if (chdir(config_t.chdir_path) == -1) {
-        log_error("can not start: unable to change directory:%s", config_t.chdir_path);
+    if (chdir(config_st.chdir_path) == -1) {
+        log_error("can not start: unable to change directory:%s", config_st.chdir_path);
         return 1;
     }
-    log_debug("bind_port:%s", config_t.bind_port);
-    log_debug("log_level:%s", config_t.log_level);
-    log_debug("chdir_path:%s", config_t.chdir_path);
-    log_debug("max_childs:%s", config_t.max_childs);
-    log_debug("child_prog:%s", config_t.child_prog);
-    log_debug("child_cf:%s", config_t.child_cf);
+    log_debug("bind_port:%s", config_st.bind_port);
+    log_debug("log_level:%s", config_st.log_level);
+    log_debug("chdir_path:%s", config_st.chdir_path);
+    log_debug("max_childs:%s", config_st.max_childs);
+    log_debug("child_prog:%s", config_st.child_prog);
+    log_debug("child_cf:%s", config_st.child_cf);
     
     // Get Local Host Name
     char local_hostname[MAX_LINE] = {0};
@@ -388,14 +388,14 @@ int main(int argc, char **argv)
     
     // ---------- ----------
     
-    childs_t = (struct childs_st *)malloc((atoi(config_t.max_childs) + 1) * sizeof(struct childs_st));
-    if (childs_t == NULL) {
-        log_error("malloc childs [%d] faild:[%d]:%s", (atoi(config_t.max_childs) + 1), errno, strerror(errno));
+    childs_st = (struct childs_t *)malloc((atoi(config_st.max_childs) + 1) * sizeof(struct childs_t));
+    if (childs_st == NULL) {
+        log_error("malloc childs [%d] faild:[%d]:%s", (atoi(config_st.max_childs) + 1), errno, strerror(errno));
         exit(1);
     }
     
     int i = 0;
-    for (i=0; i<(atoi(config_t.max_childs) +1); i++) {
+    for (i=0; i<(atoi(config_st.max_childs) +1); i++) {
         init_child_with_idx(i);
     }
     
@@ -416,7 +416,7 @@ int main(int argc, char **argv)
     }*/
     
     // Create Listen Socket
-    int bind_port = atoi(config_t.bind_port);
+    int bind_port = atoi(config_st.bind_port);
     if ((listen_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         log_error("socket fail:[%d]:%s", errno, strerror(errno));
         exit(1);
@@ -437,8 +437,8 @@ int main(int argc, char **argv)
     }
     log_info("bind local %d succ", bind_port);
     
-    if (listen(listen_fd, atoi(config_t.max_childs)) != 0) {
-        log_error("listen fd[%d] max_number[%d] failed:[%d]%s", listen_fd, atoi(config_t.max_childs), errno, strerror(errno));
+    if (listen(listen_fd, atoi(config_st.max_childs)) != 0) {
+        log_error("listen fd[%d] max_number[%d] failed:[%d]%s", listen_fd, atoi(config_st.max_childs), errno, strerror(errno));
         exit(1);
     }
     
@@ -448,7 +448,7 @@ int main(int argc, char **argv)
     sig_catch(SIGCHLD, sigchld_exit);
     
     // epoll create fd
-    epoll_event_num = atoi(config_t.max_childs) + 1;
+    epoll_event_num = atoi(config_st.max_childs) + 1;
     epoll_evts = NULL;
     epoll_fd = -1;
     epoll_nfds = -1;
@@ -506,7 +506,7 @@ int main(int argc, char **argv)
                     char greet_buf[MAX_LINE] = {0};
                     
                     // get a new index from child list
-                    int i = get_idle_idx_from_childs_t();
+                    int i = get_idle_idx_from_childs();
                     if (i == -1) {
                         log_error("get_idle_idx_from_childs_t fail: maybe client queue is full.");
                         
@@ -517,15 +517,15 @@ int main(int argc, char **argv)
                         
                         continue;
                     }
-                    childs_t[i].used = 1;
+                    childs_st[i].used = 1;
                     
                     // get client ip and port.
                     struct sockaddr_in sa;
                     int len = sizeof(sa);
                     if (!getpeername(connfd, (struct sockaddr *)&sa, &len)) {
-                        n = snprintf(childs_t[i].client_info.ip, sizeof(childs_t[i].client_info.ip), "%s", inet_ntoa(sa.sin_addr));
-                        n = snprintf(childs_t[i].client_info.port, sizeof(childs_t[i].client_info.port), "%d", ntohs(sa.sin_port));
-                        log_info("accept client:%s:%s", childs_t[i].client_info.ip, childs_t[i].client_info.port);
+                        n = snprintf(childs_st[i].client_info.ip, sizeof(childs_st[i].client_info.ip), "%s", inet_ntoa(sa.sin_addr));
+                        n = snprintf(childs_st[i].client_info.port, sizeof(childs_st[i].client_info.port), "%d", ntohs(sa.sin_port));
+                        log_info("accept client:%s:%s", childs_st[i].client_info.ip, childs_st[i].client_info.port);
                     }
                     
                     
@@ -560,7 +560,7 @@ int main(int argc, char **argv)
                     log_debug("create pi2[0]:%d pi2[1]:%d", pi2[0], pi2[1]);
                     
                     // create unique id
-                    n = create_unique_id(childs_t[i].sid, sizeof(childs_t[i].sid));
+                    n = create_unique_id(childs_st[i].sid, sizeof(childs_st[i].sid));
                     if (n != 16) {
                         log_error("create unique id fail");
                         
@@ -576,7 +576,7 @@ int main(int argc, char **argv)
                         
                         continue;
                     }
-                    log_debug("create mid:%s", childs_t[i].sid);
+                    log_debug("create mid:%s", childs_st[i].sid);
                     
                     // 当程序执行exec函数时本fd将被系统自动关闭,表示不传递给exec创建的新进程
                     fcntl(pi1[1], F_SETFD, FD_CLOEXEC);
@@ -616,19 +616,19 @@ int main(int argc, char **argv)
                         listen_fd = -1;
                         
                         if (fd_move(2, connfd) == -1) {
-                            log_error("%s fd_move(2, %d) failed:[%d]%s", childs_t[i].sid, connfd, errno, strerror(errno));
+                            log_error("%s fd_move(2, %d) failed:[%d]%s", childs_st[i].sid, connfd, errno, strerror(errno));
                             _exit(111);
                         }
                         
                         // read from 0
                         if (fd_move(0, pi1[0])) {
-                            log_error("%s fd_move(0, %d) failed:[%d]%s", childs_t[i].sid, pi1[0], errno, strerror(errno));
+                            log_error("%s fd_move(0, %d) failed:[%d]%s", childs_st[i].sid, pi1[0], errno, strerror(errno));
                             _exit(111);
                         }
                         
                         // write to 1
                         if (fd_move(1, pi2[1])) {
-                            log_error("%s fd_move(1, %d) failed:[%d]%s", childs_t[i].sid, pi2[1], errno, strerror(errno));
+                            log_error("%s fd_move(1, %d) failed:[%d]%s", childs_st[i].sid, pi2[1], errno, strerror(errno));
                             _exit(111);
                         }
                         
@@ -637,12 +637,12 @@ int main(int argc, char **argv)
                         char exe_cfg[MAX_LINE] = {0};
                         char exe_remote[MAX_LINE] = {0};
                         
-                        snprintf(exe_sid, sizeof(exe_sid), "-m%s", childs_t[i].sid);
-                        snprintf(exe_cfg, sizeof(exe_cfg), "-c%s", config_t.child_cf);
-                        snprintf(exe_remote, sizeof(exe_remote), "-r%s:%s", childs_t[i].client_info.ip, childs_t[i].client_info.port);
+                        snprintf(exe_sid, sizeof(exe_sid), "-m%s", childs_st[i].sid);
+                        snprintf(exe_cfg, sizeof(exe_cfg), "-c%s", config_st.child_cf);
+                        snprintf(exe_remote, sizeof(exe_remote), "-r%s:%s", childs_st[i].client_info.ip, childs_st[i].client_info.port);
                         
                         char *args[5];
-                        args[0] = config_t.child_prog;
+                        args[0] = config_st.child_prog;
                         args[1] = exe_sid;
                         args[2] = exe_cfg;
                         args[3] = exe_remote;
@@ -671,7 +671,7 @@ int main(int argc, char **argv)
                     
                     // 父进程
                     log_debug("add child index:%d pid:%lu", i, f);
-                    childs_t[i].pid = f;
+                    childs_st[i].pid = f;
                     
                     close(pi1[0]);
                     close(pi2[1]);
@@ -681,16 +681,16 @@ int main(int argc, char **argv)
                     close(connfd);
                     connfd = -1;
                     
-                    childs_t[i].pfd_r = pi2[0];
-                    childs_t[i].pfd_w = pi1[1];
+                    childs_st[i].pfd_r = pi2[0];
+                    childs_st[i].pfd_w = pi1[1];
                     
-                    if (set_nonblocking(childs_t[i].pfd_r)) {
-                        log_error("set nonblocking fd[%d] fail", childs_t[i].pfd_r);
+                    if (set_nonblocking(childs_st[i].pfd_r)) {
+                        log_error("set nonblocking fd[%d] fail", childs_st[i].pfd_r);
                     }
                     
                     struct epoll_event pipe_r_ev;
                     pipe_r_ev.events = EPOLLIN | EPOLLET;
-                    pipe_r_ev.data.fd = childs_t[i].pfd_r;
+                    pipe_r_ev.data.fd = childs_st[i].pfd_r;
                     if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, pipe_r_ev.data.fd, &pipe_r_ev) == -1) {
                         log_error("epoll_ctl client fd[%d] EPOLL_CTL_ADD failed:[%d]%s", pipe_r_ev.data.fd, errno, strerror(errno));
                     }
@@ -713,11 +713,11 @@ int main(int argc, char **argv)
                     log_error("get_idx_with_sockfd(%d) fail, so not process", evt_fd);
                     continue;
                 }
-                log_debug("%s get event EPOLLIN: epoll_i[%d] fd[%d] get fd[%d], used[%d]", childs_t[idx].sid, epoll_i, epoll_evts[epoll_i].data.fd, childs_t[idx].pfd_r, childs_t[idx].used);
+                log_debug("%s get event EPOLLIN: epoll_i[%d] fd[%d] get fd[%d], used[%d]", childs_st[idx].sid, epoll_i, epoll_evts[epoll_i].data.fd, childs_st[idx].pfd_r, childs_st[idx].used);
                 
                 // 读取内容
                 char cbuf[MAX_LINE] = {0};
-                nread = read(childs_t[idx].pfd_r, cbuf, sizeof(cbuf));
+                nread = read(childs_st[idx].pfd_r, cbuf, sizeof(cbuf));
                 log_debug("read buf:'[%d]%s' from child", n, cbuf);
 
                 
@@ -730,9 +730,9 @@ int main(int argc, char **argv)
                     
                     continue;
                 }
-                log_debug("%s get event EPOLLHUP: epoll_i[%d] fd[%d] get fd[%d], used[%d]", childs_t[idx].sid, epoll_i, epoll_evts[epoll_i].data.fd, childs_t[idx].pfd_r, childs_t[idx].used);
+                log_debug("%s get event EPOLLHUP: epoll_i[%d] fd[%d] get fd[%d], used[%d]", childs_st[idx].sid, epoll_i, epoll_evts[epoll_i].data.fd, childs_st[idx].pfd_r, childs_st[idx].used);
                 
-                epoll_delete_evt(epoll_fd, childs_t[idx].pfd_r);
+                epoll_delete_evt(epoll_fd, childs_st[idx].pfd_r);
                 
                 // 子进程清理
                 clean_child_with_idx(idx);
@@ -752,9 +752,9 @@ int main(int argc, char **argv)
     epoll_fd = -1;
     listen_fd = -1;
 
-	if (childs_t != NULL) {
-		free(childs_t);
-		childs_t = NULL;
+	if (childs_st != NULL) {
+		free(childs_st);
+		childs_st = NULL;
 	}
 
 	if (epoll_evts != NULL) {
