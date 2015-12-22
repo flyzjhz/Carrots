@@ -31,7 +31,7 @@
  *
  *  @return 0:succ  1:fail
  */
-int set_mc(char *mc_ip, int mc_port, int mc_timeout, char *mc_key, char *mc_value)
+int set_mc(char *mc_ip, int mc_port, int mc_timeout, char *mc_key, char *mc_value, time_t expiration)
 {
     size_t nval = 0;
     uint32_t flag = 0;
@@ -53,7 +53,7 @@ int set_mc(char *mc_ip, int mc_port, int mc_timeout, char *mc_key, char *mc_valu
         memcached_server_list_free(mc_servers);
         if (MEMCACHED_SUCCESS == mrc) {
             char mc_value_len = strlen(mc_value);
-            mrc = memcached_set(memc, mc_key, strlen(mc_key), mc_value, mc_value_len, 0, (uint32_t)flag);
+            mrc = memcached_set(memc, mc_key, strlen(mc_key), mc_value, mc_value_len, expiration, (uint32_t)flag);
             if (MEMCACHED_SUCCESS == mrc) {
                 log_debug("set mc key:%s val:%s succ", mc_key, mc_value);
                 ret = 0;;
@@ -139,7 +139,7 @@ void *get_mc(char *mc_ip, int mc_port, int mc_timeout, char *mc_key)
  *  @param mc_timeout mc 超时时间
  *  @param mc_key     需要被删除的key
  *
- *  @return 0:succ  1:fail
+ *  @return 0:succ 1:key not found 2:fail
  */
 int delete_mc(char *mc_ip, int mc_port, int mc_timeout, char *mc_key)
 {
@@ -166,9 +166,12 @@ int delete_mc(char *mc_ip, int mc_port, int mc_timeout, char *mc_key)
             if (MEMCACHED_SUCCESS == mrc) {
                 log_debug("delete mc key:%s succ", mc_key);
                 ret = 0;
+			} else if (MEMCACHED_NOTFOUND == mrc) {
+                log_debug("delete mc key:%s succ. key not found", mc_key);
+                ret = 1;
             } else {
                 log_error("delete mc key:%s failed:%s", mc_key, memcached_strerror(memc, mrc));
-                ret = 1;
+                ret = 2;
             }
             
             memcached_free(memc);
