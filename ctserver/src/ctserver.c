@@ -405,20 +405,18 @@ int main(int argc, char **argv)
     struct sockaddr_in local, remote;
     socklen_t addrlen;
     
-    /*char buf[BUF_SIZE] = {0};
-    
-    size_t pbuf_len = 0;
-    size_t pbuf_size = sizeof(buf) + 1;
-    char *pbuf = (char *)calloc(1, pbuf_size);
-    if (pbuf == NULL) {
-        log_error("calloc fail: size[%d]", pbuf_size);
-        exit(1);
-    }*/
     
     // Create Listen Socket
     int bind_port = atoi(config_st.bind_port);
     if ((listen_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         log_error("socket fail:[%d]:%s", errno, strerror(errno));
+        exit(1);
+    }
+
+	// 设置套接字选项避免地址使用错误,解决: Address already in use
+	int on = 1;
+    if ((setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on))) < 0) {
+        log_error("setsockopt failed");
         exit(1);
     }
     
