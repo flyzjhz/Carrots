@@ -37,9 +37,17 @@
 #include "ctlogicprocess.h"
 
 
-
 #define FAIL_CODE       "5.1.0"
 #define END_DATA        (u_char *) "\r\n"
+
+
+extern void socket_protocol_process(MFILE *mfp, int sockfd);
+extern void set_check_client_timeout(unsigned int timeout);
+
+
+char sid[MAX_LINE] = {0};
+char client_ip[MAX_LINE] = {0};
+char client_port[MAX_LINE] = {0};
 
 
 // fd 说明:
@@ -52,7 +60,6 @@ int client_fd = 2;
 
 // 用于与客户端读写buffer
 MFILE *mfp_in;
-MFILE *mfp_out;
 
 int buf_size;
 int max_blocksize;
@@ -67,7 +74,6 @@ int epoll_fd                   = -1;
 int epoll_nfds                 = -1;
 int epoll_event_num            = 0;
 struct epoll_event *epoll_evts = NULL;
-
 
 
 
@@ -261,6 +267,57 @@ int read_buf_from_sockfd(int sockfd, char *end_tag, size_t end_tag_len)
 
 
 
+/**
+ *  读取fd内容并保存到mfile中
+ *
+ *  @param sockfd      目标读取的fd
+ *  @param mfp		   保存到mfp中
+ *
+ *  @return -1:出错 0:进程退出 >0:保存的字节数
+ */
+int read_buf_to_mfp_from_sockfd(int sockfd, MFILE *mfp)
+{
+	char buf[BUF_SIZE] = {0};
+    int length = 0;
+    int nr = 0;
+    int nw = 0;
+    for (;;) {
+        nr = read(sockfd, buf, sizeof(buf));
+        if (nr == -1) {
+            // If errno == EAGAIN, that means we have read all data.
+			// So go back to the main loop
+            if (errno != EAGAIN) {
+                // 读取出错
+                log_error("%s read socket fd:%d fail:%m", sid, sockfd);
+
+                return -1;
+            }
+
+            return length;
+
+        } else if (nr == 0) {
+            // End of file. The remote has closed the connection.
+            return 0;
+        }
+        log_debug("%s read data from socket fd:%d data:[%d]%s", sid, sockfd, nr, buf);
+
+		nw = mwrite(mfp, buf, nr);
+        if (nw != 1) {
+            log_error("%s mwrite fail for buffer:[%d]%s", sid, nr, buf);
+            return -1;
+        }
+
+        length += nw;
+    }
+
+    return length;
+}
+
+
+
+
+
+
 
 void usage(char *prog)
 {
@@ -331,17 +388,12 @@ int main(int argc, char **argv)
     buf_size = atoi(config_t.buf_size);
     max_blocksize = atoi(config_t.max_blocksize);
     
-    mfp_in = mopen(max_blocksize, NULL, NULL);
+	mfp_in = NULL;
+    /*mfp_in = mopen(max_blocksize, NULL, NULL);
     if (mfp_in == NULL) {
         log_error("mopen fail");
         return 1;
-    }
-    mfp_out = mopen(max_blocksize, NULL, NULL);
-    if (mfp_out == NULL) {
-        log_error("mopen fail");
-        mclose(mfp_in);
-        return 1;
-    }
+    }*/
     
     
     // Get Local Host Name
@@ -436,19 +488,28 @@ int main(int argc, char **argv)
             } else if ((evt_event & EPOLLIN) && (evt_fd == client_fd)) {
                 // get read event from Client
                 log_debug("get event EPOLLIN from Client socket fd:%d", evt_fd);
-                
-                int nr = read_buf_from_sockfd(evt_fd, END_DATA, strlen(END_DATA));
-                if (nr <= 0) {
-                    log_debug("read fd[%d] num[%d]", evt_fd, nr);
-                    
-                    continue;
+
+				mfp_in = mopen(max_blocksize, NULL, NULL);
+    			if (mfp_in == NULL) {
+        			log_error("mopen fail");
+        			return 1;
+    			}  
+
+				int nr = read_buf_to_mfp_from_sockfd(evt_fd, mfp_in);
+				if (nr == -1 || nr == 0) {
+                    // 1. 出错，可能管道出错，需要退出重新建立
+                    // 2. 进程退出了
+                    close(evt_fd);
+                    close(pfd_r);
+                    close(pfd_w);
+
+                    goto CTEXIT;
+
+                } else {
+                    // process logic
+                    socket_protocol_process(mfp_in, evt_fd);
+
                 }
-                //char tmp_buf[4196] = {0};
-                //int tmp_buf_len = mread(mfp_in, tmp_buf, sizeof(tmp_buf));
-                //log_debug("read data from client:[%d]%s", tmp_buf_len, tmp_buf);
-                
-                // process logic
-                socket_protocol_process(mfp_in, evt_fd);
                 
                 // ...
                 
@@ -468,10 +529,6 @@ CTEXIT:
     if (mfp_in) {
         mclose(mfp_in);
         mfp_in = NULL;
-    }
-    if (mfp_out) {
-        mclose(mfp_out);
-        mfp_out = NULL;
     }
 	if (epoll_evts) {
 		free(epoll_evts);
