@@ -22,7 +22,7 @@ ctlog("log_ident", LOG_PID|LOG_NDELAY, LOG_MAIL);
 snprintf(log_sid, sizeof(log_sid), "tB24U1FL025441");
 
 # 3. set log level
-log_level = log_info;
+log_level = info;
 
 # 4. write log:
 log_info("info log:%s", "hello, world");	# info
