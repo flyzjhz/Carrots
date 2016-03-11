@@ -10,6 +10,7 @@ Intro
 Usage
 ------------
 
+```bash
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -35,6 +36,7 @@ int main(int argc, char **argv)
 
 
 gcc -g -o test test.c stralloc.c
+````
 
 
 
